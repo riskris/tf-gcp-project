@@ -1,2 +1,2 @@
 # tf-gcp-project
-respistory for tf gcp project
+repository for tf-gcp configuation test project
