@@ -1,9 +1,10 @@
 # Configure the Google Cloud Provider
+
 terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 4.0"
+      version = "~> 4.85.0" 
     }
   }
 }
@@ -45,6 +46,26 @@ resource "google_compute_instance" "example" {
     subnetwork = google_compute_subnetwork.default.name
   }
 }
+
+# Create a firewall rule to allow SSH access
+#two different approaches to configuring a firewall rule for SSH access in TF. 
+#scenario 1. temporary access scenario (0.0.0.0/0) 2:controlled access (Specific IP)
+
+resource "google_compute_firewall" "ssh_access" {
+  name        = "allow-ssh"
+  description = "Allow SSH access from your local machine"
+
+  network = google_compute_network.default.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+  direction ="INGRESS"
+  source_ranges = ["0.0.0.0/0"]  # Replace with your actual IP
+  #target_tags = ["ssh_access"]
+}
+
 
 # Create a Cloud Storage bucket
 resource "google_storage_bucket" "my_tfgcp_bucket" {
