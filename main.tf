@@ -68,7 +68,34 @@ resource "google_compute_firewall" "ssh_access" {
 
 
 # Create a Cloud Storage bucket
-resource "google_storage_bucket" "my_tfgcp_bucket" {
-  name          = "my_tfgcp_bucket25"
-  location     = "US" 
+resource "google_storage_bucket" "my_tfgcp_bucket2" {
+  for_each = {
+    "tfgcp_bucket1_25" = {
+      location = "US"
+      storage_class = "STANDARD"
+      labels = {
+        "environment" = "dev"
+        "team" = "devops"
+      }
+      versioning = {  
+        enabled = false
+      }
+    }
+    "tfgcp_bucket2_25" = {
+      location = "US"
+      storage_class = "NEARLINE"
+      labels = {
+        "environment" = "prod"
+        "team" = "data"
+      }
+      versioning = {  
+        enabled = true #THIS IS WRONG, IT DOESNT END UP ENABLING REVERSIONING IN THE BUCKET
+      }
+    }
+  }
+
+  name = each.key
+  location = each.value.location
+  storage_class = each.value.storage_class
+  labels = each.value.labels
 }
