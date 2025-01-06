@@ -9,6 +9,9 @@ terraform {
   }
 }
 
+# Typically for Google Cloud I don't put the project and region in the provider and put them in the resources as well
+# this then allows the same provider to be used for multiple projects and regions.  If you removed the default values
+# you would need to add them into the resources though
 provider "google" {
   project = "tfgcp-test-project-25" 
   region  = "us-central1"        
@@ -77,9 +80,7 @@ resource "google_storage_bucket" "my_tfgcp_bucket2" {
         "environment" = "dev"
         "team" = "devops"
       }
-      versioning = {  
-        enabled = false
-      }
+      versioning_enabled = true # the for_each variable setting doesn't have to align with how it is used in the config so I simplified
     }
     "tfgcp_bucket2_25" = {
       location = "US"
@@ -88,9 +89,7 @@ resource "google_storage_bucket" "my_tfgcp_bucket2" {
         "environment" = "prod"
         "team" = "data"
       }
-      versioning = {  
-        enabled = true #THIS IS WRONG, IT DOESNT END UP ENABLING REVERSIONING IN THE BUCKET
-      }
+      versioning_enabled = true
     }
   }
 
@@ -98,4 +97,13 @@ resource "google_storage_bucket" "my_tfgcp_bucket2" {
   location = each.value.location
   storage_class = each.value.storage_class
   labels = each.value.labels
+
+  # added dynamic block here which will exist if versioning_enabled is true and not exist if false
+  # see https://developer.hashicorp.com/terraform/language/expressions/dynamic-blocks
+  dynamic "versioning" {
+    for_each = each.value.versioning_enabled == true ? [""] : []
+    content {
+      enabled = true
+    }
+  }
 }
