@@ -1,101 +1,80 @@
-# Configure the Google Cloud Provider
-
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 4.85.0" 
-    }
-  }
-}
-
-provider "google" {
-  project = "tfgcp-test-project-25" 
-  region  = "us-central1"        
-}
 
 # Create a VPC network
 resource "google_compute_network" "default" {
-  name                    = "my-vpc"
+  project = var.project
+  name                    = var.network_name
   auto_create_subnetworks = false
 }
 
-# Create a subnet within the VPC
-resource "google_compute_subnetwork" "default" {
-  name          = "my-subnet"
-  ip_cidr_range = "10.128.0.0/20"
-  # Set the desired region explicitly
-  region        = "us-central1"  # Replace with your desired region
+# Create subnet(s) within the VPC
+resource "google_compute_subnetwork" "subnets" {
+  project       = var.project
+  for_each = var.subnets
+  region        = var.region
+  name          = each.key
+  ip_cidr_range = each.value.ip_cidr
   network       = google_compute_network.default.name
-  project       = "tfgcp-test-project-25" 
 }
 
-# Create a VM instance
-resource "google_compute_instance" "example" {
-  name         = "my-vm"
-  machine_type = "n1-standard-1"
-  zone         = "us-central1-a" 
+module "vm" {
+  source = "./modules/vm"
+  project       = var.project
+  for_each = var.vms
 
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-11"
-    }
-  }
-
-  network_interface {
-    subnetwork = google_compute_subnetwork.default.name
-  }
+  vm_name = each.key
+  zone = "${google_compute_subnetwork.subnets[each.value.subnet].region}-${each.value.zone}"
+  machine_type = each.value.machine_type
+  image = each.value.image
+  subnet_id = google_compute_subnetwork.subnets[each.value.subnet].id
 }
 
-# Create a firewall rule to allow SSH access
-#two different approaches to configuring a firewall rule for SSH access in TF. 
-#scenario 1. temporary access scenario (0.0.0.0/0) 2:controlled access (Specific IP)
 
-resource "google_compute_firewall" "ssh_access" {
-  name        = "allow-ssh"
-  description = "Allow SSH access from your local machine"
+resource "google_compute_firewall" "firewall_rules" {
+  project       = var.project
+  for_each = var.firewall_rules
+  name        = each.key
+  description = each.value.description
 
   network = google_compute_network.default.name
 
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
+  direction = each.value.direction
+  source_ranges = each.value.source_ranges
+  target_tags = each.value.target_tags
+
+  dynamic "allow" {
+    for_each = each.value.allow != null ? each.value.allow : []
+    content {
+      protocol = allow.value.protocol
+      ports    = allow.value.ports
+    }
   }
-  direction ="INGRESS"
-  source_ranges = ["0.0.0.0/0"]  # Replace with your actual IP
-  #target_tags = ["ssh_access"]
+
+  dynamic "deny" {
+    for_each = each.value.deny != null ? each.value.deny : []
+    content {
+      protocol = deny.value.protocol
+      ports    = deny.value.ports
+    }
+  }
 }
 
 
 # Create a Cloud Storage bucket
-resource "google_storage_bucket" "my_tfgcp_bucket2" {
-  for_each = {
-    "tfgcp_bucket1_25" = {
-      location = "US"
-      storage_class = "STANDARD"
-      labels = {
-        "environment" = "dev"
-        "team" = "devops"
-      }
-      versioning = {  
-        enabled = false
-      }
-    }
-    "tfgcp_bucket2_25" = {
-      location = "US"
-      storage_class = "NEARLINE"
-      labels = {
-        "environment" = "prod"
-        "team" = "data"
-      }
-      versioning = {  
-        enabled = true #THIS IS WRONG, IT DOESNT END UP ENABLING REVERSIONING IN THE BUCKET
-      }
-    }
-  }
+resource "google_storage_bucket" "buckets" {
+  project       = var.project
+  for_each = var.storage_buckets
+
 
   name = each.key
   location = each.value.location
   storage_class = each.value.storage_class
   labels = each.value.labels
+  uniform_bucket_level_access = true
+
+  dynamic "versioning" {
+    for_each = each.value.versioning_enabled == true ? [""] : []
+    content {
+      enabled = true
+    }
+  }
 }
