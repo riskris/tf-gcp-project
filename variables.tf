@@ -136,7 +136,7 @@ variable "cloud_sql_activation_policy" {
 variable "cloud_sql_availability_type" {
   type = string
   description = "Availability type for the Cloud SQL instance"
-  default = "REGIONAL" # Provide a default value
+  default = "ZONAL" # Provide a default value
 }
 
 variable "cloud_sql_backup_start_time" {
