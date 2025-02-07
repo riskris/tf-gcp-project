@@ -41,5 +41,5 @@ output "storage_bucket_urls" {
 }
 
 output "cloud_cql_instance_name" {
-    value = google_sql_database_instance.mycloudsql_instance_name.name
+    value = module.cloud_sql.instance_name
 }

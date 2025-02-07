@@ -21,14 +21,18 @@ resource "google_compute_subnetwork" "subnets" {
 
 
 
-#module "cloud_sql" {
-#  source = "./modules/cloud_sql"
-#  project = var.project
-#  instance_name = "my-cloud-sql-instance" # Or make this dynamic
-#  region = var.region
-#  database_version = "MYSQL_8_0"
-#  tier = "db-f1-micro"
-# }
+module "cloud_sql" {
+ source = "./modules/cloud_sql"
+ project = var.project
+ instance_name = var.cloud_sql_instance_name
+ region = var.region
+ database_version = var.cloud_sql_database_version
+ tier = var.cloud_sql_tier
+ deletion_protection = var.cloud_sql_deletion_protection
+ activation_policy = var.cloud_sql_activation_policy
+ availability_type = var.cloud_sql_availability_type
+ backup_start_time = var.cloud_sql_backup_start_time
+}
 
 resource "google_compute_firewall" "firewall_rules" {
   project = var.project
@@ -74,31 +78,19 @@ resource "google_storage_bucket" "buckets" {
   }
 }
 
-#this worked and completed after 13 minutes first time, 15:20 the second time
-#resource "google_sql_database_instance" "mycloudsql_instance_name" {
-#  project = var.project
-#  name = "my-cloud-sql-instance666"
-#  region = var.region
-#  database_version = "MYSQL_8_0"
-#  deletion_protection = false 
-#  settings { 
-#    tier = "db-f1-micro"
+# resource "google_sql_database_instance" "mycloudsql_instance_name" {
+#   project = var.project 
+#   name = var.cloud_sql_instance_name
+#   region = var.region
+#   database_version = var.cloud_sql_database_version
+#   deletion_protection = var.cloud_sql_deletion_protection
+#   settings {
+#     tier = var.cloud_sql_tier
+#   }
 # }
-#}
-
-resource "google_sql_database_instance" "mycloudsql_instance_name" {
-  project = var.project 
-  name = var.cloud_sql_instance_name
-  region = var.region
-  database_version = var.cloud_sql_database_version
-  deletion_protection = var.cloud_sql_deletion_protection
-  settings {
-    tier = var.cloud_sql_tier
-  }
-}
 
 
-  module "vm" {
+module "vm" {
   source = "./modules/vm"
   project = var.project
   for_each = var.vms
