@@ -2,16 +2,14 @@ resource "google_sql_database_instance" "cloud_sql_instance" {
   name               = var.instance_name
   project            = var.project
   region             = var.region
-  network = var.network_name 
   database_version   = var.database_version
-  tier              = var.tier
-  activation_policy = var.activation_policy
-  availability_type = var.availability_type 
+  deletion_protection = var.deletion_protection
 
-  settings = {
+  settings {
     tier              = var.tier 
     activation_policy = var.activation_policy
-    backup_configuration = {
+    availability_type = var.availability_type 
+    backup_configuration {
       start_time = var.backup_start_time 
     }
   }

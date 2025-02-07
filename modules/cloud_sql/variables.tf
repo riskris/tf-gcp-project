@@ -30,6 +30,10 @@ variable "backup_start_time" {
   description = "Start time for daily backups (e.g., '02:00')"
 }
 
+variable "deletion_protection" {
+  description = "Enable deletion protection for the Cloud SQL instance"
+}
+
 #variable "cloud_sql_users" {
 #  type = list(object({
 #    name     = string
