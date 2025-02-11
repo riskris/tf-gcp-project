@@ -126,3 +126,21 @@ variable "cloud_sql_deletion_protection" {
   description = "Enable deletion protection for the Cloud SQL Instance"
   default = false
 }
+
+variable "cloud_sql_activation_policy" {
+  type = string
+  description = "Activation policy for the Cloud SQL instance"
+  default = "ALWAYS" # Provide a default value
+}
+
+variable "cloud_sql_availability_type" {
+  type = string
+  description = "Availability type for the Cloud SQL instance"
+  default = "ZONAL" # Provide a default value
+}
+
+variable "cloud_sql_backup_start_time" {
+  type = string
+  description = "Start time for daily backups"
+  default = "02:00" # Provide a default value
+}
