@@ -42,3 +42,14 @@ variable "image" {
   type = string
   default = "debian-cloud/debian-11"
 }
+
+#cloud_sql_instance_name value that is being passed from root main.tf
+variable "cloud_sql_instance_name" {
+  type = string
+  description = "Name of the Cloud SQL instance"
+}
+
+variable "cloud_sql_region" {
+    type = string
+    description = "Region of the Cloud SQL instance"
+}

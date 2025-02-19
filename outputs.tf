@@ -40,6 +40,15 @@ output "storage_bucket_urls" {
   value = {for k,v in google_storage_bucket.buckets : k => v.url}
 }
 
-output "cloud_cql_instance_name" {
-    value = google_sql_database_instance.mycloudsql_instance_name.name
+output "cloud_sql_instance_name" {
+  value = module.cloud_sql.instance_name
+   #value = google_sql_database_instance.mycloudsql_instance_name.name
 }
+
+output "cloud_sql_database_names" {  # Make the name plural
+  value = module.cloud_sql.cloud_sql_database_names # map output
+}
+
+#output "cloud_sql_database_name" {
+#  value = module.cloud_sql.cloud_sql_database_name  # Reference the output from the module
+#}

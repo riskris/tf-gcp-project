@@ -102,22 +102,41 @@ variable "vms" {
   }
 }
 
+variable "cloud_sql_databases" {
+  type = map(object({
+    charset  = string
+    collation = string
+    # Add other database-specific settings as needed
+  }))
+  description = "Map of Cloud SQL database configurations"
+  default = {
+    "database1" = {
+      charset  = "utf8mb4"
+      collation = "utf8mb4_general_ci"
+    }
+    "database2" = {
+      charset  = "latin1"
+      collation = "latin1_swedish_ci"
+    }
+  }
+}
+
 variable "cloud_sql_instance_name" {
   type = string
   description = "Name of the Cloud SQL instance"
-  default = "my-cloud-sql-instance666" # Provide a default value
+  default = "TEST_INSTANCE_1" 
 }
 
 variable "cloud_sql_database_version" {
   type = string
   description = "Database version for Cloud SQL"
-  default = "MYSQL_8_0" # Provide a default value
+  default = "MYSQL_8_0" 
 }
 
 variable "cloud_sql_tier" {
   type = string
   description = "Tier/machine type for Cloud SQL instance"
-  default = "db-f1-micro" # Provide a default value (Not for prod)
+  default = "db-f1-micro" 
 }
 
 # Add a variable for deletion protection
@@ -126,3 +145,38 @@ variable "cloud_sql_deletion_protection" {
   description = "Enable deletion protection for the Cloud SQL Instance"
   default = false
 }
+
+variable "cloud_sql_activation_policy" {
+  type = string
+  description = "Activation policy for the Cloud SQL instance"
+  default = "ALWAYS" # Provide a default value
+}
+
+variable "cloud_sql_availability_type" {
+  type = string
+  description = "Availability type for the Cloud SQL instance"
+  default = "ZONAL" # Provide a default value
+}
+
+variable "cloud_sql_backup_start_time" {
+  type = string
+  description = "Start time for daily backups"
+  default = "02:00" # Provide a default value
+}
+
+#variable "cloud_sql_database_name" {
+#  type = string
+#  description = "Name of the Cloud SQL database"
+#}
+
+#variable "cloud_sql_database_charset" {
+#  type = string
+#  description = "Charset of the Cloud SQL database"
+#  default = "utf8mb4"
+#}
+
+#variable "cloud_sql_database_collation" {
+#  type = string
+#  description = "Collation of the Cloud SQL database"
+#  default = "utf8mb4_general_ci"
+#}

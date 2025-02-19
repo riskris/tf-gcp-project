@@ -17,18 +17,31 @@ resource "google_compute_subnetwork" "subnets" {
   network       = google_compute_network.default.name
 }
 
+#fixed module invocation
+
+module "cloud_sql" {
+  
+  #instance level settings for configuration of the Cloud SQL instance, not the individual databases
+  source = "./modules/cloud_sql"
+  project = var.project
+  instance_name = var.cloud_sql_instance_name
+  region = var.region
+  database_version = var.cloud_sql_database_version
+  tier = var.cloud_sql_tier
+  deletion_protection = var.cloud_sql_deletion_protection
+  activation_policy = var.cloud_sql_activation_policy
+  availability_type = var.cloud_sql_availability_type
+  backup_start_time = var.cloud_sql_backup_start_time
+
+  databases = var.cloud_sql_databases #pass the map of database.
+  
+  #database_name = var.cloud_sql_database_name  # Pass the database name
+  #database_charset = var.cloud_sql_database_charset # Pass the Charset
+  #database_collation = var.cloud_sql_database_collation # Pass the Collation
+
+}
 
 
-
-
-#module "cloud_sql" {
-#  source = "./modules/cloud_sql"
-#  project = var.project
-#  instance_name = "my-cloud-sql-instance" # Or make this dynamic
-#  region = var.region
-#  database_version = "MYSQL_8_0"
-#  tier = "db-f1-micro"
-# }
 
 resource "google_compute_firewall" "firewall_rules" {
   project = var.project
@@ -74,31 +87,24 @@ resource "google_storage_bucket" "buckets" {
   }
 }
 
-#this worked and completed after 13 minutes first time, 15:20 the second time
-#resource "google_sql_database_instance" "mycloudsql_instance_name" {
+#updated resource configuration that would be used if the cloud sql module was not present.
+#resource "google_sql_database_instance" "mycloudsql_instance1" {
 #  project = var.project
-#  name = "my-cloud-sql-instance666"
+#  name = var.cloud_sql_instance_name
 #  region = var.region
-#  database_version = "MYSQL_8_0"
-#  deletion_protection = false 
-#  settings { 
-#    tier = "db-f1-micro"
-# }
+#  database_version = var.cloud_sql_database_version
+#  deletion_protection = var.cloud_sql_deletion_protection
+#  settings {
+#    tier = var.cloud_sql_tier
+#  }
 #}
 
-resource "google_sql_database_instance" "mycloudsql_instance_name" {
-  project = var.project 
-  name = var.cloud_sql_instance_name
-  region = var.region
-  database_version = var.cloud_sql_database_version
-  deletion_protection = var.cloud_sql_deletion_protection
-  settings {
-    tier = var.cloud_sql_tier
-  }
-}
 
+#invocation of module "vm"
+#we want to have the ability to create multiple vms. 
+#for_each loop is placed around the google_compute_instance resource (or a module call that creates the instance inside the vm modules's main.tf)
 
-  module "vm" {
+module "vm" {
   source = "./modules/vm"
   project = var.project
   for_each = var.vms
@@ -107,6 +113,11 @@ resource "google_sql_database_instance" "mycloudsql_instance_name" {
   machine_type = each.value.machine_type
   image = each.value.image
   subnet_id = google_compute_subnetwork.subnets[each.value.subnet].id
+
+#pass the clouds_sql_instance information to vm module. connecting VM to cloud_sql instance. 
+
+  cloud_sql_instance_name = module.cloud_sql.instance_name
+  cloud_sql_region = var.region
 }
 
 
